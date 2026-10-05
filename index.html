@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom & Bristle — Small, satisfying things worth ordering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .hero3d{
+    min-height:92vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; color:var(--blush); position:relative; z-index:1; padding:40px 24px;
+  }
+  .hero3d .eyebrow{ color:var(--pink); opacity:0.9; }
+  .hero3d h1{
+    font-size:clamp(40px, 8vw, 84px); line-height:0.98; margin:16px 0 20px; color:var(--blush);
+    text-shadow: 0 2px 40px rgba(0,0,0,0.35);
+  }
+  .hero3d h1 em{ font-style:italic; color:var(--rosegold); }
+  .hero3d p{ max-width:480px; color:rgba(247,236,228,0.82); font-size:16px; margin-bottom:30px; }
+  .hero-ctas{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .scroll-hint{ margin-top:60px; font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(247,236,228,0.5); }
+
+  .cats-section{ padding:60px 0 20px; }
+  .cats-section h2{ color:var(--blush); font-size:28px; margin-bottom:8px; }
+  .cats-section p.sub{ color:rgba(247,236,228,0.7); font-size:14px; margin-bottom:26px; }
+  .cat-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:16px; margin-bottom:20px; }
+  .cat-card{
+    background:rgba(255,255,255,0.06); border:1px solid rgba(247,236,228,0.18); border-radius:18px;
+    padding:26px 20px; text-decoration:none; color:var(--blush); transition: all .2s ease; backdrop-filter: blur(2px);
+  }
+  .cat-card:hover{ background:rgba(255,255,255,0.12); transform:translateY(-3px); }
+  .cat-card .count{ font-family:'Space Mono', monospace; font-size:11px; opacity:0.6; margin-bottom:8px; display:block; }
+  .cat-card h3{ font-size:19px; color:var(--blush); }
+
+  .stats-strip{ display:flex; gap:0; margin:50px 0; border-radius:20px; overflow:hidden; }
+  .stats-strip > div{ flex:1; padding:26px 20px; text-align:center; background:rgba(255,255,255,0.05); border-right:1px solid rgba(247,236,228,0.12); }
+  .stats-strip > div:last-child{ border-right:none; }
+  .stats-strip .num{ font-family:'Fraunces', serif; font-size:30px; color:var(--rosegold); }
+  .stats-strip .label{ font-family:'Space Mono', monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(247,236,228,0.7); margin-top:4px; }
+</style>
+</head>
+<body>
+<canvas id="bg3d"></canvas>
+
+<div class="wrap">
+  <nav>
+    <a href="index.html" class="logo">bloom <em>&</em> bristle</a>
+    <div class="nav-links" style="color:var(--blush);">
+      <a href="shop.html" style="color:var(--blush);">Shop</a>
+      <a href="about.html" style="color:var(--blush);">About</a>
+      <a href="shop.html#insights" style="color:var(--blush);">Store insights</a>
+    </div>
+  </nav>
+
+  <div class="hero3d">
+    <span class="eyebrow">The Marketplace</span>
+    <h1>Bloom <em>&</em><br>Bristle</h1>
+    <p>Small, satisfying things worth ordering — hand-picked, delivered nationwide, no negotiating on price.</p>
+    <div class="hero-ctas">
+      <a href="shop.html" class="btn-primary">Browse the shop</a>
+      <a href="#categories" class="btn-ghost">See categories</a>
+    </div>
+    <div class="scroll-hint">↓ scroll</div>
+  </div>
+
+  <div class="stats-strip" id="statsStrip"></div>
+
+  <div class="cats-section" id="categories">
+    <h2>Shop by category</h2>
+    <p class="sub">Every category below is live and searchable — tap in to browse.</p>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+
+  <footer>Bloom & Bristle — Nigeria-based · <a href="about.html">About &amp; policies</a> · <a href="https://wa.me/6768812234" target="_blank" rel="noopener">WhatsApp us</a></footer>
+</div>
+
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+<script src="bg3d.js"></script>
+<script src="products.js"></script>
+<script>
+  const cats = {};
+  PRODUCTS.forEach(p => { cats[p.category] = (cats[p.category] || 0) + 1; });
+
+  document.getElementById('catGrid').innerHTML = Object.entries(cats).map(([c, n]) =>
+    '<a class="cat-card" href="shop.html?category=' + encodeURIComponent(c) + '">' +
+      '<span class="count">' + n + ' item' + (n === 1 ? '' : 's') + '</span>' +
+      '<h3>' + c + '</h3>' +
+    '</a>'
+  ).join('');
+
+  const totalCats = Object.keys(cats).length;
+  document.getElementById('statsStrip').innerHTML =
+    '<div><div class="num">' + PRODUCTS.length + '+</div><div class="label">Products</div></div>' +
+    '<div><div class="num">' + totalCats + '</div><div class="label">Categories</div></div>' +
+    '<div><div class="num">3–10</div><div class="label">Days delivery</div></div>' +
+    '<div><div class="num">100%</div><div class="label">Fixed pricing</div></div>';
+</script>
+</body>
+</html>

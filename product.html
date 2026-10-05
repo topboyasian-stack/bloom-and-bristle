@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product — Bloom & Bristle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  body{ background: linear-gradient(180deg, #1c3d38 0%, #163330 260px, var(--blush) 260px, var(--blush) 100%); }
+  .breadcrumb{ font-family:'Space Mono', monospace; font-size:12px; color:var(--blush); opacity:0.75; margin-bottom:18px; position:relative; z-index:1; text-decoration:none; display:inline-block; }
+  .review-slot{
+    display:flex; align-items:center; gap:8px; margin:10px 0 4px; font-size:13px; color:rgba(43,36,31,0.6);
+  }
+  .review-slot .stars{ color:var(--rosegold); letter-spacing:1px; font-size:14px; }
+  .sourced-badge{
+    font-family:'Space Mono', monospace; font-size:10.5px; color:var(--teal); background:rgba(31,71,65,0.08);
+    padding:5px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:5px; margin-top:8px;
+  }
+  .checkout-trust{
+    display:flex; align-items:center; justify-content:center; gap:7px; margin-top:12px;
+    font-family:'Space Mono', monospace; font-size:11px; color:rgba(43,36,31,0.6);
+  }
+  .product-grid{ display:grid; grid-template-columns:1fr 1fr; gap:44px; align-items:flex-start; }
+  .gallery-main{ aspect-ratio:1/1; border-radius:20px; overflow:hidden; background:var(--blush); }
+  .gallery-main img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .gallery-thumbs{ display:flex; gap:8px; margin-top:12px; overflow-x:auto; }
+  .gallery-thumbs img{ width:60px; height:60px; object-fit:cover; border-radius:8px; cursor:pointer; opacity:0.6; border:2px solid transparent; }
+  .gallery-thumbs img.active{ opacity:1; border-color:var(--rosegold); }
+  .rotate-btn{
+    margin-top:10px; background:#fff; border:1px solid var(--line); border-radius:999px; padding:9px 16px;
+    font-family:'Space Mono', monospace; font-size:11px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+  }
+  .modal-price{ font-family:'Fraunces', serif; font-size:36px; margin:14px 0 4px; }
+  .modal-price-sub{ font-family:'Space Mono', monospace; font-size:13px; color:rgba(43,36,31,0.55); }
+  .modal-body ul{ list-style:none; margin:20px 0 28px; }
+  .modal-body ul li{ padding:11px 0; border-top:1px solid var(--line); font-size:14px; display:flex; gap:10px; }
+  .modal-body ul li:last-child{ border-bottom:1px solid var(--line); }
+  .modal-body ul li::before{ content:"◈"; color:var(--rosegold); flex-shrink:0; }
+  .form-field{ margin-bottom:14px; }
+  .form-field label{ display:block; font-family:'Space Mono', monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:rgba(43,36,31,0.6); margin-bottom:5px; }
+  .form-field input{ width:100%; padding:12px 13px; border-radius:9px; border:1px solid var(--line); font-size:13px; background:var(--blush); }
+  .wa-mini{
+    display:block; text-align:center; margin-top:10px; font-family:'Space Mono', monospace; font-size:12px;
+    text-transform:uppercase; letter-spacing:0.04em; padding:14px; border-radius:999px; border:1px solid var(--teal);
+    color:var(--teal); text-decoration:none;
+  }
+  .disclaimer{ font-size:11.5px; color:rgba(43,36,31,0.55); margin-top:12px; line-height:1.5; }
+  .placeholder-note{
+    font-family:'Manrope', sans-serif; font-size:12px; background:rgba(192,138,99,0.12); color:rgba(43,36,31,0.75);
+    padding:8px 12px; border-radius:10px; display:inline-flex; align-items:center; gap:6px; margin-top:10px;
+  }
+  @media (max-width: 760px){ .product-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a href="index.html" class="logo" style="color:var(--blush);">bloom <em>&</em> bristle</a>
+    <div class="nav-links">
+      <a href="shop.html" style="color:var(--blush);">Shop</a>
+      <a href="about.html" style="color:var(--blush);">About</a>
+    </div>
+  </nav>
+
+  <a href="shop.html" class="breadcrumb">← Back to shop</a>
+
+  <div class="panel" id="productContainer">
+    <p style="position:relative; z-index:1;">Loading product…</p>
+  </div>
+
+  <footer>Bloom & Bristle — Nigeria-based · <a href="about.html">About &amp; policies</a> · <a href="https://wa.me/6768812234" target="_blank" rel="noopener">WhatsApp us</a></footer>
+</div>
+
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="products.js"></script>
+<script>
+const WHATSAPP_NUMBER = "6768812234";
+const PAYSTACK_PUBLIC_KEY = "pk_live_1e2da2460cc4be969819fbf1174fce4d335f3252";
+
+const id = new URLSearchParams(window.location.search).get('id');
+const p = PRODUCTS.find(x => x.id === id);
+let currentAngle = 0;
+
+function render(){
+  const container = document.getElementById('productContainer');
+  if(!p){
+    container.innerHTML = '<p style="position:relative;z-index:1;">Product not found. <a href="shop.html">Back to shop</a></p>';
+    return;
+  }
+  document.title = p.name + " — Bloom & Bristle";
+
+  const waMsg = "Hi Bloom & Bristle! I've just paid for the " + p.name + " (₦" + p.priceNGN.toLocaleString() + ").\n\nPayment reference: [paste from Paystack receipt]\nFull name: [your name]\nDelivery address: [your address]\nPhone: [your number]\n\nPlease confirm my order — thank you!";
+  const waLink = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(waMsg);
+
+  container.innerHTML =
+    '<div class="product-grid">' +
+      '<div>' +
+        '<div class="gallery-main"><img id="mainImg" src="' + p.images[0] + '"></div>' +
+        (p.images.length > 1 ? '<button class="rotate-btn" onclick="rotateAngle()">↻ Rotate view</button>' : '') +
+        '<div class="gallery-thumbs" id="thumbs">' +
+          p.images.map((img,i) => '<img src="' + img + '" class="' + (i===0?'active':'') + '" onclick="setAngle(' + i + ')">').join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<span class="eyebrow">' + p.tag + '</span>' +
+        '<h2 style="font-size:28px; margin:8px 0 6px;">' + p.name + '</h2>' +
+        '<div class="review-slot"><span class="stars">☆☆☆☆☆</span><span>Be the first to review this</span></div>' +
+        '<div class="modal-price">₦' + p.priceNGN.toLocaleString() + '</div>' +
+        '<div class="modal-price-sub">≈ $' + p.priceUSD + ' USD — charged in NGN at checkout</div>' +
+        (p.sourceNote ? '<div class="sourced-badge">✓ ' + p.sourceNote + '</div>' : '') +
+        (p.placeholderNote ? '<div class="placeholder-note">📷 ' + p.placeholderNote + '</div>' : '') +
+        '<ul>' + p.description.map(d => '<li>' + d + '</li>').join('') + '</ul>' +
+        '<div class="form-field"><label>Full name</label><input type="text" id="m_name"></div>' +
+        '<div class="form-field"><label>Email (for receipt)</label><input type="email" id="m_email"></div>' +
+        '<div class="form-field"><label>Phone</label><input type="tel" id="m_phone"></div>' +
+        '<button class="btn-primary" style="width:100%; padding:16px; justify-content:center;" onclick="payForCurrent()">Pay ₦' + p.priceNGN.toLocaleString() + ' securely</button>' +
+        '<div class="checkout-trust">🔒 Secured by Paystack &nbsp;·&nbsp; 📦 Delivery in 3–10 business days</div>' +
+        '<a class="wa-mini" href="' + waLink + '" target="_blank" rel="noopener">Already paid? Confirm on WhatsApp</a>' +
+        '<p class="disclaimer">WhatsApp is used only to collect your delivery details and confirm the order — pricing is fixed above and isn\'t negotiated in chat.</p>' +
+      '</div>' +
+    '</div>';
+}
+render();
+
+function setAngle(i){
+  currentAngle = i;
+  document.getElementById('mainImg').src = p.images[i];
+  document.querySelectorAll('#thumbs img').forEach((el,idx) => el.classList.toggle('active', idx===i));
+}
+function rotateAngle(){ currentAngle = (currentAngle + 1) % p.images.length; setAngle(currentAngle); }
+
+function payForCurrent(){
+  const email = document.getElementById('m_email').value.trim();
+  const name = document.getElementById('m_name').value.trim();
+  if(!email || !email.includes('@')){ alert('Please enter a valid email for your receipt.'); return; }
+  if(!name){ alert('Please enter your full name.'); return; }
+  const handler = PaystackPop.setup({
+    key: PAYSTACK_PUBLIC_KEY,
+    email: email,
+    amount: p.priceNGN * 100,
+    currency: "NGN",
+    metadata: {
+      custom_fields: [
+        { display_name: "Product", variable_name: "product", value: p.name },
+        { display_name: "Full Name", variable_name: "full_name", value: name },
+        { display_name: "Phone", variable_name: "phone", value: document.getElementById('m_phone').value.trim() }
+      ]
+    },
+    callback: function(response){
+      alert('Payment successful! Reference: ' + response.reference + '\n\nNow tap "Confirm on WhatsApp" and paste this reference in the message.');
+    },
+    onClose: function(){}
+  });
+  handler.openIframe();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop — Bloom & Bristle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  body{ background: linear-gradient(180deg, #1c3d38 0%, #163330 240px, var(--blush) 240px, var(--blush) 100%); }
+  .page-header{ padding:8px 0 26px; position:relative; z-index:1; }
+  .page-header h1{ color:var(--blush); font-size:clamp(28px,4vw,40px); margin:10px 0 6px; }
+  .page-header p{ color:rgba(247,236,228,0.75); font-size:14px; max-width:520px; }
+  .panel-light{ background:#fff; border-radius:24px; padding:32px; margin-bottom:26px; }
+  .empty-state{ text-align:center; }
+  .empty-state h3{ font-size:19px; margin-bottom:8px; }
+  .empty-state p{ font-size:14px; color:rgba(43,36,31,0.65); max-width:420px; margin:0 auto 18px; }
+  .notify-form{ display:flex; gap:10px; max-width:420px; margin:0 auto; flex-wrap:wrap; justify-content:center; }
+  .notify-form input{ flex:1; min-width:160px; padding:11px 14px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .insights-toggle{
+    font-family:'Space Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em;
+    color:rgba(247,236,228,0.6); background:none; border:none; cursor:pointer; padding:8px 0; text-decoration:underline;
+  }
+  .insights-panel{ display:none; margin-top:14px; }
+  .insights-panel.active{ display:block; }
+  .insights-panel h4{ font-family:'Space Mono', monospace; font-size:12px; text-transform:uppercase; margin-bottom:10px; color:var(--teal); }
+  .insights-list{ list-style:none; font-size:13px; margin-bottom:20px; }
+  .insights-list li{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line); }
+  .insights-empty{ font-size:13px; color:rgba(43,36,31,0.5); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a href="index.html" class="logo" style="color:var(--blush);">bloom <em>&</em> bristle</a>
+    <div class="searchbar">
+      <input type="text" id="searchInput" placeholder="Search products — e.g. hair, skin, gadget...">
+    </div>
+    <div class="nav-links">
+      <a href="index.html" style="color:var(--blush);">Home</a>
+      <a href="about.html" style="color:var(--blush);">About</a>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <span class="eyebrow" style="color:var(--pink);">The Marketplace</span>
+    <h1>Everything in one place.</h1>
+    <p>Search or filter by category. Can't find something? We log it and notify you the moment it's added.</p>
+  </div>
+
+  <div class="cat-pills" id="catPills"></div>
+  <div id="productGrid" class="grid"></div>
+
+  <div class="panel-light empty-state" id="emptyState" style="display:none;">
+    <h3 id="emptyTitle">Nothing matching that just yet</h3>
+    <p>We log every search so we know what to bring in next. Leave your WhatsApp number and we'll message you the moment it drops.</p>
+    <div class="notify-form">
+      <input type="text" id="notifyContact" placeholder="Your WhatsApp number">
+      <button class="btn-primary" style="background:var(--teal); color:var(--blush);" onclick="submitDemand()">Notify me</button>
+    </div>
+  </div>
+
+  <div id="insights" style="position:relative; z-index:1;">
+    <button class="insights-toggle" onclick="toggleInsights()">Store insights (owner view)</button>
+    <div class="panel-light insights-panel" id="insightsPanel">
+      <h4>Top searches</h4>
+      <ul class="insights-list" id="searchList"><li class="insights-empty">Loading...</li></ul>
+      <h4>Demand requests waiting on notify</h4>
+      <ul class="insights-list" id="demandList"><li class="insights-empty">Loading...</li></ul>
+    </div>
+  </div>
+
+  <footer>Bloom & Bristle — Nigeria-based · <a href="about.html">About &amp; policies</a> · <a href="https://wa.me/6768812234" target="_blank" rel="noopener">WhatsApp us</a></footer>
+</div>
+
+<script src="products.js"></script>
+<script>
+let activeCategory = "All";
+let searchTimeout;
+
+function getQueryParam(name){
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+async function logSearch(term){
+  term = term.trim().toLowerCase();
+  if(!term || term.length < 2) return;
+  try{ await window.storage.set("search:" + Date.now() + ":" + Math.random().toString(36).slice(2,7), term, true); }
+  catch(e){ console.error(e); }
+}
+
+async function submitDemand(){
+  const contact = document.getElementById('notifyContact').value.trim();
+  if(!contact){ alert('Please enter a WhatsApp number so we can notify you.'); return; }
+  const term = document.getElementById('searchInput').value.trim();
+  try{
+    await window.storage.set("demand:" + Date.now(), JSON.stringify({query: term, contact: contact}), true);
+    document.getElementById('emptyState').innerHTML = "<h3>Got it — we'll notify you</h3><p>We'll reach out on WhatsApp as soon as \"" + term + "\" is available.</p>";
+  }catch(e){ alert("Something went wrong — please try again."); }
+}
+
+async function toggleInsights(){
+  const panel = document.getElementById('insightsPanel');
+  panel.classList.toggle('active');
+  if(!panel.classList.contains('active')) return;
+  const searchList = document.getElementById('searchList');
+  const demandList = document.getElementById('demandList');
+  searchList.innerHTML = "<li class='insights-empty'>Loading...</li>";
+  demandList.innerHTML = "<li class='insights-empty'>Loading...</li>";
+  try{
+    const searchKeys = await window.storage.list("search:", true);
+    const counts = {};
+    if(searchKeys && searchKeys.keys){
+      for(const k of searchKeys.keys){
+        try{ const res = await window.storage.get(k, true); counts[res.value] = (counts[res.value]||0)+1; }catch(e){}
+      }
+    }
+    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    searchList.innerHTML = sorted.length ? sorted.map(([t,c])=>"<li><span>"+t+"</span><span>"+c+"×</span></li>").join("") : "<li class='insights-empty'>No searches logged yet.</li>";
+  }catch(e){ searchList.innerHTML = "<li class='insights-empty'>Couldn't load search data.</li>"; }
+  try{
+    const demandKeys = await window.storage.list("demand:", true);
+    if(demandKeys && demandKeys.keys && demandKeys.keys.length){
+      const items = [];
+      for(const k of demandKeys.keys){
+        try{ const res = await window.storage.get(k, true); items.push(JSON.parse(res.value)); }catch(e){}
+      }
+      demandList.innerHTML = items.map(d => "<li><span>"+(d.query||"(unspecified)")+"</span><span>"+d.contact+"</span></li>").join("");
+    } else { demandList.innerHTML = "<li class='insights-empty'>No pending requests.</li>"; }
+  }catch(e){ demandList.innerHTML = "<li class='insights-empty'>Couldn't load demand data.</li>"; }
+}
+
+function renderCategoryPills(){
+  const cats = ["All", ...new Set(PRODUCTS.map(p => p.category))];
+  document.getElementById('catPills').innerHTML = cats.map(c =>
+    '<button class="cat-pill' + (c===activeCategory?' active':'') + '" onclick="setCategory(\''+c+'\')">' + c + '</button>'
+  ).join("");
+}
+function setCategory(c){ activeCategory = c; renderCategoryPills(); applyFilters(); }
+
+function applyFilters(){
+  const term = document.getElementById('searchInput').value.trim().toLowerCase();
+  let list = PRODUCTS.filter(p => activeCategory === "All" || p.category === activeCategory);
+  if(term){ list = list.filter(p => p.name.toLowerCase().includes(term) || p.tags.some(t => t.includes(term))); }
+  renderGrid(list, term);
+  clearTimeout(searchTimeout);
+  if(term) searchTimeout = setTimeout(() => logSearch(term), 900);
+}
+
+function renderGrid(list, term){
+  const grid = document.getElementById('productGrid');
+  const empty = document.getElementById('emptyState');
+  if(list.length === 0){
+    grid.style.display = 'none'; empty.style.display = 'block';
+    document.getElementById('emptyTitle').textContent = 'Nothing matching "' + (term||'') + '" just yet';
+    return;
+  }
+  grid.style.display = 'grid'; empty.style.display = 'none';
+  grid.innerHTML = list.map(p => (
+    '<a class="card" href="product.html?id=' + encodeURIComponent(p.id) + '">' +
+      '<img src="' + p.images[0] + '" alt="' + p.name + '">' +
+      '<div class="card-body">' +
+        '<span class="tag">' + p.tag + '</span>' +
+        '<h3>' + p.name + '</h3>' +
+        '<div class="card-price">₦' + p.priceNGN.toLocaleString() + '</div>' +
+      '</div>' +
+    '</a>'
+  )).join("");
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+const preCategory = getQueryParam('category');
+if(preCategory) activeCategory = preCategory;
+renderCategoryPills();
+applyFilters();
+</script>
+</body>
+</html>
