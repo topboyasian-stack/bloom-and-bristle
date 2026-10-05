@@ -12,12 +12,6 @@ A Nigeria-based marketplace front end built around product discovery. Shoppers m
 - A clear path from browsing to contacting the store
 - Responsive layout for mobile and desktop
 
-## Outreach fit
-**Portfolio role:** E-commerce / marketplace example  
-**Best agency pitch:** Overflow production for online stores, catalogues, marketplaces and product-discovery websites  
-**Demonstrates:** Search, category architecture, product presentation, navigation, responsive frontend and conversion-oriented structure  
-**Live proof:** https://bloommarketplace.netlify.app/
-
 ## Tech
 HTML, CSS, JavaScript. Deployed on Netlify.
 
