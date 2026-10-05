@@ -1,0 +1,23 @@
+name: Materialize project source
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  materialize:
+    if: "${{ !hashFiles('index.html') }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract project source
+        run: |
+          unzip -o "6a94d1a5cdc8b1e09e799c7a-016aba78cb92bd10.zip" -x "README.md" -d .
+          rm -f "6a94d1a5cdc8b1e09e799c7a-016aba78cb92bd10.zip"
+      - name: Commit source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Materialize project source from archived upload"
+          git push
